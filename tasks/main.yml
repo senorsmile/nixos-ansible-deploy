@@ -90,13 +90,14 @@
   when:
     - nix_home_manager
 
-#- name: destroy home-manager dir
-#  file:
-#    state: absent
-#    #path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
-#    path: "{{ nixos_dest_dir }}/home-manager/{{ nix_home_manager_user }}/"
-#  when:
-#    - not nix_home_manager
+- name: destroy home-manager dir
+  file:
+    state: absent
+    #path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
+    path: "{{ nixos_dest_dir }}/home-manager/{{ nix_home_manager_user }}/"
+  when:
+    - not nix_home_manager
+    - nix_home_manager_user is defined
 
 - name: manage flake.nix
   copy:
