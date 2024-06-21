@@ -93,7 +93,7 @@
     state: absent
     path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
   when:
-    - ! nix_home_manager
+    - not nix_home_manager
 
 - name: manage flake.nix
   copy:

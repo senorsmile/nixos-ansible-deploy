@@ -65,7 +65,7 @@ nixos_flake_config: |
         {################}
         {# home manager #}
         {################}
-        {% if nixos_home_manager is defined and nixos_home_manager %}
+        {% if nix_home_manager is defined and nix_home_manager %}
         home-manager,
         {% endif %}
         {% if nix_flakes_extra_inputs != '' %}
@@ -170,8 +170,7 @@ nixos_flake_config: |
                     ln -sv ${pkgs.path} $out/nixpkgs
                   '';
                   ####################################
-                  {% if nixos_flakes_import_modules is defined %}
-
+                  {% if nixos_flakes_import_modules is defined or nix_home_manager %}
 
                   ####################################
                   # imports
@@ -180,13 +179,18 @@ nixos_flake_config: |
                     {################}
                     {# home manager #}
                     {################}
-                    {% if nixos_home_manager is defined and nixos_home_manager %}
+                    {% if nix_home_manager is defined and nix_home_manager %}
                     inputs.home-manager.nixosModules.home-manager
 
                     {% endif %}
+                    {##################}
+                    {# import modules #}
+                    {##################}
+                    {% if nixos_flakes_import_modules is defined %}
                     {% for import in nixos_flakes_import_modules %}
                     {{ import }}
                     {% endfor %}
+                    {% endif %}
                   ];
                   ####################################
                   {% endif %}
@@ -194,7 +198,7 @@ nixos_flake_config: |
                   {################}
                   {# home manager #}
                   {################}
-                  {% if nixos_home_manager is defined and nixos_home_manager %}
+                  {% if nix_home_manager is defined and nix_home_manager %}
                   # home manager run automatically with nixos-rebuild
                   # https://github.com/Misterio77/nix-starter-configs#use-home-manager-as-a-nixos-module
                   home-manager = {
