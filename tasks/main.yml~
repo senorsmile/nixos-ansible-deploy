@@ -1,0 +1,131 @@
+---
+- name: Rebuild nixos?
+  debug:
+    var: nixos_rebuild_enabled
+
+- name: Nixos install?
+  debug:
+    var: nixos_install
+
+- name: Fail if not nixos livecd
+  raw: |
+    [ -d /iso ] && {
+      mount | grep iso9660 | grep '/iso' >/dev/null && {
+        echo "YES_ISO /iso is a mounted iso9660 file system"
+      } || {
+        echo "NO_ISO /iso is NOT a mounted iso9660 file system"
+      }
+    } || {
+      echo "NO_ISO /iso is not mounted"
+    }
+  register: is_nixos_livecd
+  when: ( nixos_install )
+  failed_when: ( "NO_ISO" in is_nixos_livecd.stdout )
+  changed_when: False
+
+- set_fact:
+    nixos_dest_dir: '/tmp/etc/nixos'
+  when: ( nixos_install )
+
+- name: Create temp nixos folder for install
+  file:
+    state: directory
+    path: "{{ nixos_dest_dir }}"
+  when: ( nixos_install )
+
+- name: Disko config file
+  copy:
+    content: "{{ nixos_disko_config }}"
+    dest: "{{ nixos_dest_dir }}/disk-config.nix"
+  when: nixos_disko_config is defined
+
+- name: nixos_flake_config is defined?
+  debug:
+    var: nixos_flake_config is defined
+
+- name: nixos_flakes_enabled is defined?
+  debug:
+    var: nixos_flakes_enabled
+
+- name: Verify all configs resolving properly
+  assert:
+    that:
+      - nixos_flake_config is defined
+  when:
+    - nixos_flakes_enabled is defined and nixos_flakes_enabled
+
+- name: Copy run.sh
+  copy:
+    src: run.sh
+    dest: "{{ nixos_dest_dir }}/run.sh"
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: manage configuration.nix
+  copy:
+    content: "{{ nixos_config }}"
+    dest: "{{ nixos_dest_dir }}/configuration.nix"
+  notify: nixos-rebuild
+  when:
+    - nixos_config is defined
+
+- name: manage flake.nix
+  copy:
+    content: "{{ nixos_flake_config }}"
+    dest: "{{ nixos_dest_dir }}/flake.nix"
+  notify: nixos-rebuild
+  when:
+    - nixos_flake_config is defined
+    - nixos_flakes_enabled
+
+- name: "create {{ nixos_dest_dir }}/modules dir"
+  file:
+    state: directory
+    path: "{{ nixos_dest_dir }}/modules/"
+  when: nixos_extra_configs is defined
+
+- name: remove config files
+  file:
+    state: absent
+    path: "{{ nixos_dest_dir }}/modules/{{ item.dest }}"
+  loop: "{{ nixos_extra_configs_remove }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: nixos_extra_configs_remove is defined
+  notify: nixos-rebuild
+
+#- name: verify extra config files exist
+#  assert:
+#    that: ( item.config is defined )
+#  loop: "{{ nixos_extra_configs }}"
+#  loop_control:
+#    label: "{{ item.dest }}"
+#  when: nixos_extra_configs is defined
+#  notify: nixos-rebuild
+
+- name: create extra config file dir
+  file:
+    state: directory
+    path: "{{ nixos_dest_dir }}/modules/{{ item.dest | dirname }}"
+  loop: "{{ nixos_extra_configs }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when:
+    - nixos_extra_configs is defined
+    - ( '/' in item.dest )
+
+- name: manage extra config files
+  copy:
+    content: "{{ item.config }}"
+    dest: "{{ nixos_dest_dir }}/modules/{{ item.dest }}"
+  loop: "{{ nixos_extra_configs }}"
+  loop_control:
+    label: "{{ item.dest }}"
+  when: nixos_extra_configs is defined
+  notify: nixos-rebuild
+
+- name: Flush handlers
+  meta: flush_handlers
+
+

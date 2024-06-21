@@ -1,0 +1,37 @@
+---
+- name: nixos-rebuild
+  shell: |
+    nixos-rebuild dry-run && nixos-rebuild switch
+  register: nixos_rebuild
+  changed_when: (
+      ( "restarting" in nixos_rebuild.stderr )
+      or
+      ( "building '/nix'" in nixos_rebuild.stderr )
+      or
+      ( "created" in nixos_rebuild.stderr )
+      or
+      ( "reloading the following units" in nixos_rebuild.stderr )
+      or
+      ( "restarting the following units" in nixos_rebuild.stderr )
+      or
+      ( "starting the following units" in nixos_rebuild.stderr )
+      or
+      ( "will be built" in nixos_rebuild.stderr )
+    )
+  notify:
+    - Print nixos-rebuild stdout results
+    - Print nixos-rebuild stderr results
+  when:
+    - nixos_rebuild_enabled | bool
+    - not nixos_install
+
+- name: Print nixos-rebuild stdout results
+  debug:
+    var: nixos_rebuild.stdout
+  when: nixos_rebuild is defined
+
+- name: Print nixos-rebuild stderr results
+  debug:
+    var: nixos_rebuild.stderr
+  when: nixos_rebuild is defined
+

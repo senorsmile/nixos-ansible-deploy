@@ -1,0 +1,235 @@
+---
+nixos_rebuild_enabled: True
+nixos_install: False
+nixos_dest_dir: '/etc/nixos'
+nixos_flakes_enabled: False
+nixos_nixpkgs_unstable: False
+nix_flakes_extra_inputs: ''
+nix_home_manager: False
+#nix_home_manager_pkgset:
+
+nixos_flake_config: |
+    #jinja2: lstrip_blocks: "True"
+  
+    {
+      inputs = {
+        nixpkgs.url = "github:NixOS/nixpkgs/{{ nixpkgs_set | mandatory }}"; # {{ nixpkgs_set_comment | default("") }}
+        {###########}
+        {# pyyaml5 #}
+        {###########}
+        {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
+
+        nixpkgs-pyyaml5.url = "github:NixOS/nixpkgs/{{ nixpkgs_set_pyyaml5 }}"; # "{{ nixpkgs_set_pyyaml5_comment }}
+        {% endif %}
+        {################}
+        {# unstable #}
+        {################}
+        {% if nixos_nixpkgs_unstable %}
+
+        nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+        {% endif %}
+        {################}
+        {# home manager #}
+        {################}
+        {% if nix_home_manager %}
+        {# https://github.com/nix-community/home-manager/tree/release-24.05 #}
+
+        home-manager.url = "github:nix-community/home-manager/{{ nix_home_manager_pkgset }}"; # {{ nix_home_manager_pkgset_comment | default("") }}
+        {% endif %}
+        {##########################}
+        {# loop over extra inputs #}
+        {##########################}
+        {% if nix_flakes_extra_inputs != '' %}
+
+        {% for extra_input in nix_flakes_extra_inputs %}
+        {{ extra_input.name }} = {
+          url = "{{ extra_input.url }}";
+          {% if extra_input.follow_nixpkgs is defined %}
+          inputs.nixpkgs.follows = "nixpkgs";
+          {% endif %}
+        };
+
+        {% endfor %}
+        {% endif %}
+      };
+
+      outputs = {
+        self,
+        nixpkgs,
+        {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
+        nixpkgs-unstable,
+        {% endif %}
+        {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
+        nixpkgs-pyyaml5,
+        {% endif %}
+        {################}
+        {# home manager #}
+        {################}
+        {% if nixos_home_manager is defined and nixos_home_manager %}
+        home-manager,
+        {% endif %}
+        {% if nix_flakes_extra_inputs != '' %}
+        {% for extra_input in nix_flakes_extra_inputs %}
+        {{ extra_input.name }},
+        {% endfor %}
+        {% endif %}
+        ... }@attrs:
+      let
+        system = "{{ nixos_systemtype | mandatory }}";
+
+        # https://discourse.nixos.org/t/do-flakes-also-set-the-system-channel/19798/16
+        nixPath = "/etc/nixPath";
+
+        # https://nixos.wiki/wiki/Flakes#Importing_packages_from_multiple_channels
+        {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
+        #overlay-pkgs-pyyaml5 = final: prev: {
+        #  pkgs-pyyaml5 = nixpkgs-pyyaml5.legacyPackages.${prev.system};
+        #};
+        {% endif %}
+        {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
+        overlay-pkgs-unstable = final: prev: {
+          pkgs-unstable = nixpkgs-unstable.legacyPackages.${prev.system};
+        };
+        {% endif %}
+
+      in {
+        nixosConfigurations."{{ nixos_systemname | mandatory }}" = nixpkgs.lib.nixosSystem {
+          inherit system;
+
+          # Pass flake inputs to our config
+          # needed for home-manager # why?
+          specialArgs = { inherit inputs; };
+
+          modules = [
+              # Overlays-module makes "pkgs-pyyaml5" available in configuration.nix
+              ({ config, pkgs, ... }: {
+                nixpkgs.overlays = [
+                  {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}overlay-pkgs-pyyaml5{% endif %}
+                  {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}overlay-pkgs-unstable{% endif %}
+                ];
+              })
+
+              #./configuration.nix # delete this line once all nodes no longer using
+              {% if nixos_extra_configs is defined %}
+              {% for item in nixos_extra_configs %}
+              {% if "/" not in item.dest %}
+              ./modules/{{ item.dest }}
+              {% endif %}
+              {% endfor %}
+              {% endif %}
+
+              {% if nixos_extra_configs_direct is defined %}
+              {% for item in nixos_extra_configs_direct %}
+                {{ item }}
+              {% endfor %}
+              {% endif %}
+
+              ({ config, pkgs, inputs, lib, modulesPath, ... }: {
+                  nixpkgs.config.allowUnfree = {% if nix_unfree is defined and not nix_unfree %}false{% else %}true{% endif %}; {# default to true #}
+
+                  nix.settings.experimental-features = "nix-command flakes";
+
+                  networking.hostName = "{{ inventory_hostname | mandatory}}";
+                  {% if nixos_host_domain is defined %}
+                  networking.domain = "{{ nixos_host_domain }}";
+                  {% endif %}
+
+                  {% if nixos_force_git is defined and nixos_force_git %}
+                  ####################################
+                  # force git
+                  ####################################
+                  # Let 'nixos-version --json' know about the Git revision
+                  # of this flake.
+                  # and force git commit before running
+                  # https://www.tweag.io/blog/2020-07-31-nixos-flakes/
+                  system.configurationRevision =
+                    if self ? rev
+                    then self.rev
+                    else throw "Refusing to build from a dirty Git tree!  Commit your changes and rerun.";
+                  ####################################
+                  {% endif %}
+
+
+                  ####################################
+                  # set system to use flake's nixpkgs
+                  ####################################
+                  # pin nixpkgs to the flake's nixpkgs (e.g. for nix-shell etc)
+                  # https://www.tweag.io/blog/2020-07-31-nixos-flakes/
+                  nix.registry.nixpkgs.flake = nixpkgs;
+
+                  # https://discourse.nixos.org/t/do-flakes-also-set-the-system-channel/19798/16
+                  systemd.tmpfiles.rules = [
+                    "L+ ${nixPath} - - - - ${pkgs.path}"
+                  ];
+                  nix.nixPath = [ "nixpkgs=${nixPath}" ];
+
+                  # attempt to override the nixPath with the flake's nixpkgs path
+                  # https://github.com/pbek/nixcfg/commit/7cddcb47054b351a484c4959dcf162f9c5c6a2fe
+                  #nix.nixPath = [ "nixpkgs=/run/current-system/nixpkgs" ];
+                  system.extraSystemBuilderCmds = ''
+                    ln -sv ${pkgs.path} $out/nixpkgs
+                  '';
+                  ####################################
+                  {% if nixos_flakes_import_modules is defined %}
+
+
+                  ####################################
+                  # imports
+                  ####################################
+                  imports = [
+                    {################}
+                    {# home manager #}
+                    {################}
+                    {% if nixos_home_manager is defined and nixos_home_manager %}
+                    inputs.home-manager.nixosModules.home-manager
+
+                    {% endif %}
+                    {% for import in nixos_flakes_import_modules %}
+                    {{ import }}
+                    {% endfor %}
+                  ];
+                  ####################################
+                  {% endif %}
+
+                  {################}
+                  {# home manager #}
+                  {################}
+                  {% if nixos_home_manager is defined and nixos_home_manager %}
+                  # home manager run automatically with nixos-rebuild
+                  # https://github.com/Misterio77/nix-starter-configs#use-home-manager-as-a-nixos-module
+                  home-manager = {
+                    extraSpecialArgs = { inherit inputs; };
+                    users = {
+                      # Import your home-manager configuration
+                      {{ nix_home_manager_user }} = import /home/{{ nix_home_manager_user }}/.config/home-manager/home.nix;
+                    };
+                  };
+                  {% endif %}
+                  {################}
+                  {% if nixos_flakes_extra_config is defined  %}
+
+
+                  ####################################
+                  # extra config
+                  ####################################
+                  {% filter indent(width=14, first=true) %}
+                  {{ nixos_flakes_extra_config }}
+                  {% endfilter %}
+                  ####################################
+                  {% endif %}
+
+
+                  # This value determines the NixOS release from which the default
+                  # settings for stateful data, like file locations and database versions
+                  # on your system were taken. It‘s perfectly fine and recommended to leave
+                  # this value at the release version of the first install of this system.
+                  # Before changing this value read the documentation for this option
+                  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+                  system.stateVersion = "{{ nixos_system_state_version }}"; # Did you read the comment?
+
+              })
+            ];
+        };
+      };
+
+    }
