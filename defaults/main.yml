@@ -53,7 +53,7 @@ nixos_flake_config: |
         {% endif %}
       };
 
-      outputs = inputs @{
+      outputs = inputs @ {
         self,
         nixpkgs,
         {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
@@ -73,7 +73,8 @@ nixos_flake_config: |
         {{ extra_input.name }},
         {% endfor %}
         {% endif %}
-        ... }@attrs:
+        ... }:
+        #... }@attrs:
       let
         system = "{{ nixos_systemtype | mandatory }}";
 
