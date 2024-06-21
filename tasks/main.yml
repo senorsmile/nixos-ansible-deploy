@@ -77,23 +77,26 @@
 - name: create home-manager dir
   file:
     state: directory
-    path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
+    #path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
+    path: "{{ nixos_dest_dir }}/home-manager/{{ nix_home_manager_user }}/"
   when:
     - nix_home_manager
 
 - name: manage home.nix
   template:
     src: home.nix.j2
-    dest: "/home/{{ nix_home_manager_user }}/.config/home-manager/home.nix"
+    #dest: "/home/{{ nix_home_manager_user }}/.config/home-manager/home.nix"
+    dest: "{{ nixos_dest_dir }}/home-manager/{{ nix_home_manager_user }}/home.nix"
   when:
     - nix_home_manager
 
-- name: destroy home-manager dir
-  file:
-    state: absent
-    path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
-  when:
-    - not nix_home_manager
+#- name: destroy home-manager dir
+#  file:
+#    state: absent
+#    #path: "/home/{{ nix_home_manager_user }}/.config/home-manager/"
+#    path: "{{ nixos_dest_dir }}/home-manager/{{ nix_home_manager_user }}/"
+#  when:
+#    - not nix_home_manager
 
 - name: manage flake.nix
   copy:

@@ -2,6 +2,7 @@
 # Use this to configure your home environment (it replaces ~/.config/nixpkgs/home.nix)
 # Docs: 
 #    https://nix-community.github.io/home-manager/index.xhtml#ch-usage
+#    https://nix-community.github.io/home-manager/options.xhtml
 
 { inputs, lib, config, pkgs, ... }: {
   # You can import other home-manager modules here
@@ -38,7 +39,7 @@
   # username
   home = {
     username = "{{ nix_home_manager_user }}";
-    homeDirectory = "{{ nix_home_manager_user }}";
+    homeDirectory = "/home/{{ nix_home_manager_user }}";
   };
 
   # Enable home-manager

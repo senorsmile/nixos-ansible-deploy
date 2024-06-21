@@ -206,7 +206,7 @@ nixos_flake_config: |
                     extraSpecialArgs = { inherit inputs; };
                     users = {
                       # Import your home-manager configuration
-                      {{ nix_home_manager_user }} = import /home/{{ nix_home_manager_user }}/.config/home-manager/home.nix;
+                      {{ nix_home_manager_user }} = import ./home-manager/{{ nix_home_manager_user }}/home.nix;
                     };
                   };
                   {% endif %}
