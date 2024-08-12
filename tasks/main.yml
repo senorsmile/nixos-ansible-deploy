@@ -66,6 +66,14 @@
     group: root
     mode: '0700'
 
+- name: Copy check.sh
+  copy:
+    src: check.sh
+    dest: "{{ nixos_dest_dir }}/check.sh"
+    owner: root
+    group: root
+    mode: '0700'
+
 - name: manage configuration.nix
   copy:
     content: "{{ nixos_config }}"

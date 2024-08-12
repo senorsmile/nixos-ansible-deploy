@@ -111,14 +111,38 @@ nixos_flake_config: |
               })
 
               #./configuration.nix # delete this line once all nodes no longer using
+
+              {# ################################################ #}
+              {# List of dict variables containing:               #}
+              {#   dest: & config:                                #}
+              {# We define these in a _modules/ directory, but    #}
+              {# they can be anywhere read by inventory.          #}
+              {# E.g.                                             #}
+              {#  nix_examplemod:                                 #}
+              {#    dest: examplemod.nix                          #}
+              {#    config: |                                     #}
+              {#      #jinja2: lstrip_blocks: "True"              #}
+              {#      { config, pkgs, lib, ... }:                 #}
+              {#      {                                           #}
+              {#        environment.systemPackages = with pkgs; [ #}
+              {#          vim                                     #}
+              {#        ];                                        #}
+              {#      }                                           #}
+              {# ################################################ #}
               {% if nixos_extra_configs is defined %}
               {% for item in nixos_extra_configs %}
+              {# if a directory is defined, it is assumed to not be in ./modules/ #}
               {% if "/" not in item.dest %}
               ./modules/{{ item.dest }}
               {% endif %}
               {% endfor %}
               {% endif %}
 
+              {# ###################################### #}
+              {# List of other files to import into the #}
+              {# flake.nix.  E.g.                       #}
+              {#   - './hardware-configuration.nix'     #}
+              {# ###################################### #}
               {% if nixos_extra_configs_direct is defined %}
               {% for item in nixos_extra_configs_direct %}
                 {{ item }}
@@ -199,7 +223,8 @@ nixos_flake_config: |
                   {################}
                   {# home manager #}
                   {################}
-                  {% if nix_home_manager is defined and nix_home_manager %}
+                  {% if nix_home_manager %}
+                  ####################################
                   # home manager run automatically with nixos-rebuild
                   # https://github.com/Misterio77/nix-starter-configs#use-home-manager-as-a-nixos-module
                   home-manager = {
@@ -209,8 +234,8 @@ nixos_flake_config: |
                       {{ nix_home_manager_user }} = import ./home-manager/{{ nix_home_manager_user }}/home.nix;
                     };
                   };
+                  ####################################
                   {% endif %}
-                  {################}
                   {% if nixos_flakes_extra_config is defined  %}
 
 
