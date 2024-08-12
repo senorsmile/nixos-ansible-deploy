@@ -25,4 +25,4 @@ nix-check-upgrades-better ()
     popd &> /dev/null
 }
 
-nix-check-upgrades-better "$@"
+time nix-check-upgrades-better "$@"
