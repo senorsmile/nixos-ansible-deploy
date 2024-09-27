@@ -27,11 +27,15 @@
     nixos_dest_dir: '/tmp/etc/nixos'
   when: ( nixos_install )
 
+- name: Print nixos_dest_dir
+  debug:
+    var: nixos_dest_dir
+
 - name: Create temp nixos folder for install
   file:
     state: directory
     path: "{{ nixos_dest_dir }}"
-  when: ( nixos_install )
+  #when: ( nixos_install )
 
 - name: Disko config file
   copy:
