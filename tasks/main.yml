@@ -43,10 +43,6 @@
     dest: "{{ nixos_dest_dir }}/disk-config.nix"
   when: nixos_disko_config is defined
 
-#- debug: # TODO: deleteme
-#    var: nixos_flake_config  # TODO: deleteme
-#- pause: # TODO: deleteme
-
 - name: nixos_flake_config is defined?
   debug:
     var: nixos_flake_config is defined
