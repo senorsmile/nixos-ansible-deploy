@@ -8,7 +8,7 @@ nix-check-upgrades-better ()
     fi;
     if [[ ! -n $(command -v nvd) ]]; then
         echo "This function requires nvd to be installed";
-        echo "You can install it temporarily with `nix-shell -p nvd`";
+        echo 'You can install it temporarily with `nix-shell -p nvd`';
     fi;
     local flakes_params='';
     local flakes_path="$1";

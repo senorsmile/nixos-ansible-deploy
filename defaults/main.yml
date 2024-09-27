@@ -44,12 +44,14 @@ nixos_flake_config: |
         {% for extra_input in nix_flakes_extra_inputs %}
         {{ extra_input.name }} = {
           url = "{{ extra_input.url }}";
-          {% if extra_input.follow_nixpkgs is defined %}
+          {% if extra_input.follow_nixpkgs is defined and extra_input.follow_nixpkgs %}
           inputs.nixpkgs.follows = "nixpkgs";
           {% endif %}
         };
 
         {% endfor %}
+        {% else %}
+          # ansible: nix_flakes_extra_inputs == ''
         {% endif %}
       };
 
@@ -83,9 +85,9 @@ nixos_flake_config: |
 
         # https://nixos.wiki/wiki/Flakes#Importing_packages_from_multiple_channels
         {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
-        #overlay-pkgs-pyyaml5 = final: prev: {
-        #  pkgs-pyyaml5 = nixpkgs-pyyaml5.legacyPackages.${prev.system};
-        #};
+        overlay-pkgs-pyyaml5 = final: prev: {
+          pkgs-pyyaml5 = nixpkgs-pyyaml5.legacyPackages.${prev.system};
+        };
         {% endif %}
         {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
         overlay-pkgs-unstable = final: prev: {
