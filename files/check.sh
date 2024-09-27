@@ -1,3 +1,6 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash -p nvd
+
 nix-check-upgrades-better () 
 { 
     if [[ $# -eq 0 ]]; then
@@ -6,10 +9,10 @@ nix-check-upgrades-better ()
         echo "${FUNCNAME[0]} "'$(pwd)';
         return 1;
     fi;
-    if [[ ! -n $(command -v nvd) ]]; then
-        echo "This function requires nvd to be installed";
-        echo 'You can install it temporarily with `nix-shell -p nvd`';
-    fi;
+    #if [[ ! -n $(command -v nvd) ]]; then
+    #    echo "This function requires nvd to be installed";
+    #    echo 'You can install it temporarily with `nix-shell -p nvd`';
+    #fi;
     local flakes_params='';
     local flakes_path="$1";
     local flakes='True';
