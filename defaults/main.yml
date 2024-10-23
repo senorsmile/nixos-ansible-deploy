@@ -57,8 +57,10 @@ nixos_flake_config: |
 
 
       {% if nix_flakes_nix_config is defined %}
+      nixConfig = {
         extra-substituters = "{{ nix_flakes_nix_config.extra_substituters }}";
         extra-trusted-public-keys = "{{ nix_flakes_nix_config.extra_trusted_public_keys }}";
+      };
       {% endif %}
 
       outputs = inputs @ {
