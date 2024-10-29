@@ -15,6 +15,8 @@ nix-check-upgrades-better ()
     #fi;
     local flakes_params='';
     local flakes_path="$1";
+    shift
+    local args="$@"
     local flakes='True';
     local tempdir="$flakes_path";
     flakes_params='--flake .#';
@@ -23,7 +25,11 @@ nix-check-upgrades-better ()
     if [[ -L "$tempdir/result" ]]; then
         rm "$tempdir/result";
     fi;
-    eval time sudo nixos-rebuild build "$flakes_params";
+    eval time sudo nixos-rebuild build "$flakes_params" "$args";
+    if [[ ! -d "$tempdir/result" ]]; then
+      echo -en "***************************** \nrun it again to create result dir after build-host success\n***************************** \n"
+      eval time sudo nixos-rebuild build "$flakes_params"
+    fi
     nvd diff /run/current-system "$tempdir/result";
     popd &> /dev/null
 }
