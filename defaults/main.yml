@@ -6,6 +6,7 @@ nixos_flakes_enabled: False
 nixos_nixpkgs_unstable: False
 nix_flakes_extra_inputs: ''
 nix_home_manager: False
+nixos_fail2ban: True
 #nix_home_manager_pkgset:
 
 nixos_flake_config: |
