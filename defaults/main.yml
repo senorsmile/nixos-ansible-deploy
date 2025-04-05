@@ -23,7 +23,7 @@ nixos_flake_config: |
         nixpkgs-pyyaml5.url = "github:NixOS/nixpkgs/{{ nixpkgs_set_pyyaml5 }}"; # "{{ nixpkgs_set_pyyaml5_comment }}
         {% endif %}
         {################}
-        {# unstable #}
+        {# unstable     #}
         {################}
         {% if nixos_nixpkgs_unstable %}
 
@@ -98,11 +98,6 @@ nixos_flake_config: |
           pkgs-pyyaml5 = nixpkgs-pyyaml5.legacyPackages.${prev.system};
         };
         {% endif %}
-        {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
-        overlay-pkgs-unstable = final: prev: {
-          pkgs-unstable = nixpkgs-unstable.legacyPackages.${prev.system};
-        };
-        {% endif %}
 
       in {
         nixosConfigurations."{{ nixos_systemname | mandatory }}" = nixpkgs.lib.nixosSystem {
@@ -110,16 +105,50 @@ nixos_flake_config: |
 
           # Pass flake inputs to our config
           # needed for home-manager # why?
-          specialArgs = { inherit inputs; };
+          specialArgs = {
+            inherit inputs;
+            {# ######## #}
+            {# unstable #}
+            {# ######## #}
+            {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
+
+            pkgs-unstable = import nixpkgs-unstable {
+              # Refer to the `system` parameter from
+              # the outer scope recursively
+              inherit system;
+              # allow unfree for this scope
+              config.allowUnfree = {% if nix_unfree is defined and not nix_unfree %}false{% else %}true{% endif %};
+            };
+            {% endif %}
+
+            {# ############ #}
+            {# extra inputs #}
+            {# ############ #}
+            {% if nix_flakes_extra_inputs != '' %}
+            {% for extra_input in nix_flakes_extra_inputs %}
+            {% if extra_input.special_args is not defined or ( extra_input.special_args is defined and extra_input.special_args != False ) %}
+
+            pkgs-{{ extra_input.name }} = import {{ extra_input.name }} {
+              # Refer to the `system` parameter from
+              # the outer scope recursively
+              inherit system;
+              # allow unfree for this scope if not defined
+              config.allowUnfree = {% if nix_unfree is defined and not nix_unfree %}false{% else %}true{% endif %};
+            };
+            {% endif %}
+            {% endfor %}
+            {% endif %}
+          };
 
           modules = [
+              {#
               # Overlays-module makes "pkgs-pyyaml5" available in configuration.nix
               ({ config, pkgs, ... }: {
                 nixpkgs.overlays = [
                   {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}overlay-pkgs-pyyaml5{% endif %}
-                  {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}overlay-pkgs-unstable{% endif %}
                 ];
               })
+              #}
 
               #./configuration.nix # delete this line once all nodes no longer using
 
@@ -165,7 +194,7 @@ nixos_flake_config: |
 
                   nix.settings.experimental-features = "nix-command flakes";
 
-                  networking.hostName = "{{ inventory_hostname | mandatory}}";
+                  networking.hostName = lib.mkOverride 49 "{{ inventory_hostname | mandatory}}";
                   {% if nixos_host_domain is defined %}
                   networking.domain = "{{ nixos_host_domain }}";
                   {% endif %}
@@ -266,7 +295,7 @@ nixos_flake_config: |
                   # this value at the release version of the first install of this system.
                   # Before changing this value read the documentation for this option
                   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-                  system.stateVersion = "{{ nixos_system_state_version }}"; # Did you read the comment?
+                  system.stateVersion = "{{ nixos_system_state_version | mandatory }}"; # Did you read the comment?
 
               })
             ];
