@@ -17,7 +17,7 @@ nix-check-upgrades-better ()
     local flakes_path="$1";
     shift
     local args="$@"
-    local flakes='True';
+    #local flakes='True';
     local tempdir="$flakes_path";
     flakes_params='--flake .#';
     tempdir=$(echo "$tempdir" | perl -plane 's|^(.*)/$|\1|');
