@@ -189,7 +189,7 @@ nixos_flake_config: |
               {% endfor %}
               {% endif %}
 
-              ({ config, pkgs, inputs, lib, modulesPath, ... }: {
+              ({ config, pkgs, inputs, lib, modulesPath,{% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %} pkgs-unstable,{% endif %}... }: {
                   nixpkgs.config.allowUnfree = {% if nix_unfree is defined and not nix_unfree %}false{% else %}true{% endif %}; {# default to true #}
 
                   nix.settings.experimental-features = "nix-command flakes";
