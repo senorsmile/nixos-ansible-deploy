@@ -162,5 +162,25 @@
   when: nixos_extra_configs is defined
   notify: nixos-rebuild
 
+- name: Create custom files dirs
+  file:
+    state: directory
+    path: "{{ item.path | dirname }}"
+  loop: "{{ nixos_custom_files }}"
+  loop_control:
+    label: "{{ item.path }}"
+
+- name: Transfer custom files
+  copy:
+    content: "{{ item.content }}"
+    dest: "{{ item.path }}"
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{ item.group | default('root') }}"
+    mode: "{{ item.mode | default('0644') }}"
+  loop: "{{ nixos_custom_files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: nixos_custom_files is defined
+
 - name: Flush handlers
   meta: flush_handlers
