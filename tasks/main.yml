@@ -162,6 +162,12 @@
   when: nixos_extra_configs is defined
   notify: nixos-rebuild
 
+- set_fact:
+    nixos_custom_files: |
+      {{ nixos_custom_files | default([]) + lookup('vars', item) }}
+  loop: |
+    {{ hostvars[inventory_hostname].keys() | map('regex_search','^nixos_custom_files_.*') | select('string') | list }}
+
 - name: Create custom files dirs
   file:
     state: directory
@@ -169,6 +175,7 @@
   loop: "{{ nixos_custom_files }}"
   loop_control:
     label: "{{ item.path }}"
+  when: nixos_custom_files is defined
 
 - name: Transfer custom files
   copy:

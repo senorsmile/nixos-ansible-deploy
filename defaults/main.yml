@@ -27,7 +27,7 @@ nixos_flake_config: |
         {################}
         {% if nixos_nixpkgs_unstable %}
 
-        nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixos-unstable";
+        nixpkgs-unstable.url = "github:NixOS/nixpkgs/{{ nixos_nixpkgs_unstable_ver | default('nixos-unstable') }}";  # {{ nixos_nixpkgs_unstable_ver_comment | default("") }}
         {% endif %}
         {################}
         {# home manager #}
@@ -44,7 +44,7 @@ nixos_flake_config: |
 
         {% for extra_input in nix_flakes_extra_inputs %}
         {{ extra_input.name }} = {
-          url = "{{ extra_input.url }}";
+          url = "{{ extra_input.url }}"; # {{ extra_input.url_comment | default("") }}
           {% if extra_input.follow_nixpkgs is defined and extra_input.follow_nixpkgs %}
           inputs.nixpkgs.follows = "nixpkgs";
           {% endif %}
