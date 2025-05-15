@@ -188,6 +188,7 @@
   loop_control:
     label: "{{ item.path }}"
   when: nixos_custom_files is defined
+  notify: nixos-rebuild
 
 - name: Flush handlers
   meta: flush_handlers

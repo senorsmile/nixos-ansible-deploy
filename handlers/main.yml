@@ -1,7 +1,11 @@
 ---
 - name: nixos-rebuild
   shell: |
-    nixos-rebuild dry-run && nixos-rebuild switch
+    if [ '{{ ansible_check_mode }}' == 'True' ] || [ '{{ ansible_check_mode }}' == 'true' ]; then
+      echo "IN CHECK MODE: nixos-rebuild will be built" >&2
+    else
+      echo nixos-rebuild dry-run && nixos-rebuild switch
+    fi
   register: nixos_rebuild
   changed_when: (
       ( "restarting" in nixos_rebuild.stderr )
@@ -24,14 +28,16 @@
   when:
     - nixos_rebuild_enabled | bool
     - not nixos_install
+  check_mode: False # False = always run this task
 
 - name: Print nixos-rebuild stdout results
   debug:
     var: nixos_rebuild.stdout
   when: nixos_rebuild is defined
+  check_mode: False # False = always run this task
 
 - name: Print nixos-rebuild stderr results
   debug:
     var: nixos_rebuild.stderr
   when: nixos_rebuild is defined
-
+  check_mode: False # False = always run this task
