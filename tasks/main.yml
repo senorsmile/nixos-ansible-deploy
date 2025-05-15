@@ -177,6 +177,9 @@
     label: "{{ item.path }}"
   when: nixos_custom_files is defined
 
+- name: Flush handlers
+  meta: flush_handlers
+
 - name: Transfer custom files
   copy:
     content: "{{ item.content }}"
