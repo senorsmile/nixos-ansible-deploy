@@ -104,7 +104,8 @@ nixos_flake_config: |
           inherit system;
 
           # Pass flake inputs to our config
-          # needed for home-manager # why?
+          # -- The `specialArgs` parameter passes the
+          # -- non-default nixpkgs instances to other nix modules
           specialArgs = {
             inherit inputs;
             {# ######## #}
