@@ -167,15 +167,22 @@
       {{ nixos_custom_files | default([]) + lookup('vars', item) }}
   loop: |
     {{ hostvars[inventory_hostname].keys() | map('regex_search','^nixos_custom_files_.*') | select('string') | list }}
-  when:
-    # if when_constraint is defined
-    - ( 'when_constraint' in lookup('vars', item, errors='warn') )
-    # get the variable out of when_constraint, and check if it's true
-    - lookup(
-        'vars',
-        ( lookup('vars', item, errors='warn')['when_constraint'] ),
-        errors='warn'
+  # if when_constraint is defined
+  # get the variable out of when_constraint, and check if it's true
+  # otherwise, run if when_constraint is NOT defined
+  when: (
+      (
+        'when_constraint' in lookup('vars', item, errors='warn')
+      ) and (
+        lookup(
+          'vars',
+          ( lookup('vars', item, errors='warn')['when_constraint'] ),
+          errors='warn'
+        )
       )
+    ) or (
+      'when_constraint' not in lookup('vars', item, errors='warn')
+    )
 
 - name: Create custom files dirs
   file:
