@@ -167,22 +167,6 @@
       {{ nixos_custom_files | default([]) + lookup('vars', item) }}
   loop: |
     {{ hostvars[inventory_hostname].keys() | map('regex_search','^nixos_custom_files_.*') | select('string') | list }}
-  # if when_constraint is defined
-  # get the variable out of when_constraint, and check if it's true
-  # otherwise, run if when_constraint is NOT defined
-  when: (
-      (
-        'when_constraint' in lookup('vars', item, errors='warn')
-      ) and (
-        lookup(
-          'vars',
-          ( lookup('vars', item, errors='warn')['when_constraint'] ),
-          errors='warn'
-        )
-      )
-    ) or (
-      'when_constraint' not in lookup('vars', item, errors='warn')
-    )
 
 - name: Create custom files dirs
   file:
@@ -206,7 +190,17 @@
   loop: "{{ nixos_custom_files }}"
   loop_control:
     label: "{{ item.path }}"
-  when: nixos_custom_files is defined
+  when:
+    - nixos_custom_files is defined
+    - (
+        (
+          ( 'when_constraint' in item )
+          and
+          ( lookup('vars', item['when_constraint']) )
+        ) or (
+          'when_constraint' not in item
+        )
+      )
   notify: nixos-rebuild
 
 - name: Flush handlers
