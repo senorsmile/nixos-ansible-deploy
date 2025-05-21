@@ -27,7 +27,7 @@ nixos_flake_config: |
         {################}
         {% if nixos_nixpkgs_unstable %}
 
-        nixpkgs-unstable.url = "github:NixOS/nixpkgs/{{ nixos_nixpkgs_unstable_ver | default('nixos-unstable') }}";  # {{ nixos_nixpkgs_unstable_ver_comment | default("") }}
+        nixpkgs-unstable.url = "github:NixOS/nixpkgs/{{ nixos_nixpkgs_unstable_ver | default('nixos-unstable') }}";  # {{ nixos_nixpkgs_unstable_comment | default("") }}
         {% endif %}
         {################}
         {# home manager #}
