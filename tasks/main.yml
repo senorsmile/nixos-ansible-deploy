@@ -190,7 +190,17 @@
   loop: "{{ nixos_custom_files }}"
   loop_control:
     label: "{{ item.path }}"
-  when: nixos_custom_files is defined
+  when:
+    - nixos_custom_files is defined
+    - (
+        (
+          ( 'when_constraint' in item )
+          and
+          ( lookup('vars', item['when_constraint']) )
+        ) or (
+          'when_constraint' not in item
+        )
+      )
   notify: nixos-rebuild
 
 - name: Flush handlers
