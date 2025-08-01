@@ -7,6 +7,11 @@ nixos_nixpkgs_unstable: False
 nix_flakes_extra_inputs: ''
 nix_home_manager: False
 nixos_fail2ban: True
+nixos_harden:
+  enable: False
+  nix_mineral:
+    enable: True
+    ver: 'v0.1.6-alpha'
 #nix_home_manager_pkgset:
 
 nixos_flake_config: |
@@ -15,12 +20,13 @@ nixos_flake_config: |
     {
       inputs = {
         nixpkgs.url = "github:NixOS/nixpkgs/{{ nixpkgs_set | mandatory }}"; # {{ nixpkgs_set_comment | default("") }}
-        {###########}
-        {# pyyaml5 #}
-        {###########}
-        {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
+        {################}
+        {# harden nixos #}
+        {################}
+        {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
 
-        nixpkgs-pyyaml5.url = "github:NixOS/nixpkgs/{{ nixpkgs_set_pyyaml5 }}"; # "{{ nixpkgs_set_pyyaml5_comment }}
+        nix-mineral.url = "https://github.com/cynicsketch/nix-mineral.git/{{ nixos_harden.nix_mineral_ver | mandatory }}";
+        {% endif %}
         {% endif %}
         {################}
         {# unstable     #}
@@ -67,11 +73,11 @@ nixos_flake_config: |
       outputs = inputs @ {
         self,
         nixpkgs,
+        {############}
+        {# unstable #}
+        {############}
         {% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %}
         nixpkgs-unstable,
-        {% endif %}
-        {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
-        nixpkgs-pyyaml5,
         {% endif %}
         {################}
         {# home manager #}
@@ -91,13 +97,6 @@ nixos_flake_config: |
 
         # https://discourse.nixos.org/t/do-flakes-also-set-the-system-channel/19798/16
         nixPath = "/etc/nixPath";
-
-        # https://nixos.wiki/wiki/Flakes#Importing_packages_from_multiple_channels
-        {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}
-        overlay-pkgs-pyyaml5 = final: prev: {
-          pkgs-pyyaml5 = nixpkgs-pyyaml5.legacyPackages.${prev.system};
-        };
-        {% endif %}
 
       in {
         nixosConfigurations."{{ nixos_systemname | mandatory }}" = nixpkgs.lib.nixosSystem {
@@ -142,15 +141,6 @@ nixos_flake_config: |
           };
 
           modules = [
-              {#
-              # Overlays-module makes "pkgs-pyyaml5" available in configuration.nix
-              ({ config, pkgs, ... }: {
-                nixpkgs.overlays = [
-                  {% if nixpkgs_set_pyyaml5 is defined and nixpkgs_set_pyyaml5 %}overlay-pkgs-pyyaml5{% endif %}
-                ];
-              })
-              #}
-
               #./configuration.nix # delete this line once all nodes no longer using
 
               {# ################################################ #}
@@ -242,6 +232,12 @@ nixos_flake_config: |
                   # imports
                   ####################################
                   imports = [
+                    {################}
+                    {# harden nixos #}
+                    {################}
+                    {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
+                    "${inputs.nix-mineral}/nix-mineral.nix"
+                    {% endif %}
                     {################}
                     {# home manager #}
                     {################}
