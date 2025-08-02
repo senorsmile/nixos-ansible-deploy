@@ -7,11 +7,12 @@ nixos_nixpkgs_unstable: False
 nix_flakes_extra_inputs: ''
 nix_home_manager: False
 nixos_fail2ban: True
+nixos_tmp_cleanonboot: True
 nixos_harden:
   enable: False
   nix_mineral:
     enable: True
-    ver: 'v0.1.6-alpha'
+    ver: 'refs/tags/v0.1.6-alpha'
 #nix_home_manager_pkgset:
 
 nixos_flake_config: |
@@ -25,8 +26,13 @@ nixos_flake_config: |
         {################}
         {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
 
-        nix-mineral.url = "https://github.com/cynicsketch/nix-mineral.git/{{ nixos_harden.nix_mineral_ver | mandatory }}";
-        {% endif %}
+        nix-mineral = {
+          type  = "github";
+          owner = "cynicsketch";
+          repo  = "nix-mineral";
+          ref   = "{{ nixos_harden.nix_mineral.ver | mandatory }}"; # {{ nixos_harden.nix_mineral.ver_comment | default("") }}
+          flake = false;
+        };
         {% endif %}
         {################}
         {# unstable     #}
@@ -190,6 +196,9 @@ nixos_flake_config: |
                   networking.domain = "{{ nixos_host_domain }}";
                   {% endif %}
 
+                  boot.tmp.cleanOnBoot = {% if nixos_tmp_cleanonboot %}true{% else %}false{% endif %};
+
+
                   {% if nixos_force_git is defined and nixos_force_git %}
                   ####################################
                   # force git
@@ -226,7 +235,7 @@ nixos_flake_config: |
                     ln -sv ${pkgs.path} $out/nixpkgs
                   '';
                   ####################################
-                  {% if nixos_flakes_import_modules is defined or nix_home_manager %}
+                  {% if nixos_flakes_import_modules is defined or nix_home_manager or nixos_harden.enable %}
 
                   ####################################
                   # imports
