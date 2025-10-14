@@ -19,3 +19,4 @@ cd "${script_dir}"
 set -x
 #time sudo nixos-rebuild "$args" --flake .#
 eval time sudo nixos-rebuild "$args" "$set_flake"
+date
