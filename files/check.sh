@@ -35,3 +35,4 @@ nix-check-upgrades-better ()
 }
 
 time nix-check-upgrades-better "$@"
+date
