@@ -237,7 +237,7 @@ nixos_flake_config: |
                   # attempt to override the nixPath with the flake's nixpkgs path
                   # https://github.com/pbek/nixcfg/commit/7cddcb47054b351a484c4959dcf162f9c5c6a2fe
                   #nix.nixPath = [ "nixpkgs=/run/current-system/nixpkgs" ];
-                  system.systemBuilderCommands = ''
+                  system.extraSystemBuilderCommands = ''
                     ln -sv ${pkgs.path} $out/nixpkgs
                   '';
                   {% endif %}
