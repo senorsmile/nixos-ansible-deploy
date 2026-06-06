@@ -209,6 +209,21 @@ nixos_flake_config: |
                   ####################################
                   # set system to use flake's nixpkgs
                   ####################################
+                  {% if
+                      ( nixos_system_current_version is defined
+                        and
+                        (nixos_system_current_version is version('24.05', '>=') ) )
+                      or
+                      ( nixos_system_current_version is not defined )
+                  %}
+                  # NB: we explicitly set these here.
+                  # However, they have been default since 24.05.
+                  # And, they remove the need for all the other manual steps.
+                  nixpkgs.flake = {
+                    setFlakeRegistry = true;
+                    setNixPath = true;
+                  };
+                  {% else %}
                   # pin nixpkgs to the flake's nixpkgs (e.g. for nix-shell etc)
                   # https://www.tweag.io/blog/2020-07-31-nixos-flakes/
                   nix.registry.nixpkgs.flake = nixpkgs;
@@ -222,11 +237,13 @@ nixos_flake_config: |
                   # attempt to override the nixPath with the flake's nixpkgs path
                   # https://github.com/pbek/nixcfg/commit/7cddcb47054b351a484c4959dcf162f9c5c6a2fe
                   #nix.nixPath = [ "nixpkgs=/run/current-system/nixpkgs" ];
-                  system.extraSystemBuilderCmds = ''
+                  system.systemBuilderCommands = ''
                     ln -sv ${pkgs.path} $out/nixpkgs
                   '';
+                  {% endif %}
                   ####################################
                   {% if nixos_flakes_import_modules is defined or nix_home_manager %}
+
 
                   ####################################
                   # imports
