@@ -27,7 +27,6 @@ nixos_flake_config: |
 
         nix-mineral.url = "https://github.com/cynicsketch/nix-mineral.git/{{ nixos_harden.nix_mineral_ver | mandatory }}";
         {% endif %}
-        {% endif %}
         {################}
         {# unstable     #}
         {################}
@@ -42,6 +41,13 @@ nixos_flake_config: |
         {# https://github.com/nix-community/home-manager/tree/release-24.05 #}
 
         home-manager.url = "github:nix-community/home-manager/{{ nix_home_manager_pkgset }}"; # {{ nix_home_manager_pkgset_comment | default("") }}
+        {% endif %}
+        {################}
+        {# nix-flatpak  #}
+        {################}
+        {% if nix_nixflatpak is defined and nix_nixflatpak %}
+
+        nix-flatpak.url = "github:gmodena/nix-flatpak/?ref={% if nix_nixflatpak_ver is defined %}{{ nix_nixflatpak_ver }}{% else %}latest{% endif %}";
         {% endif %}
         {##########################}
         {# loop over extra inputs #}
@@ -180,6 +186,14 @@ nixos_flake_config: |
               {% endfor %}
               {% endif %}
 
+              {# ###################################### #}
+              {# nix-flatpak module                     #}
+              {# ###################################### #}
+              {% if nix_nixflatpak is defined and nix_nixflatpak %}
+              nix-flatpak.nixosModules.nix-flatpak
+              {% endif %}
+              {# ###################################### #}
+
               ({ config, pkgs, inputs, lib, modulesPath,{% if nixos_nixpkgs_unstable is defined and nixos_nixpkgs_unstable %} pkgs-unstable,{% endif %}... }: {
                   nixpkgs.config.allowUnfree = {% if nix_unfree is defined and not nix_unfree %}false{% else %}true{% endif %}; {# default to true #}
 
@@ -291,6 +305,14 @@ nixos_flake_config: |
                   ####################################
                   {% endif %}
                   {% if nixos_flakes_extra_config is defined  %}
+
+
+                  ####################################
+                  # flatpak (nix-flatpak)
+                  ####################################
+                  {% if nix_nixflatpak is defined and nix_nixflatpak %}
+                  services.flatpak.enable = true;
+                  {% endif %}
 
 
                   ####################################
