@@ -312,9 +312,9 @@ nixos_flake_config: |
                   ####################################
                   {% if nix_nixflatpak is defined and nix_nixflatpak %}
                   services.flatpak.enable = true;
+
+
                   {% endif %}
-
-
                   ####################################
                   # extra config
                   ####################################
