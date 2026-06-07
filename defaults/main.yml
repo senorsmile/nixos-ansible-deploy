@@ -91,6 +91,15 @@ nixos_flake_config: |
         {% if nix_home_manager is defined and nix_home_manager %}
         home-manager,
         {% endif %}
+        {################}
+        {# nix-flatpak  #}
+        {################}
+        {% if nix_nixflatpak is defined and nix_nixflatpak %}
+        nix-flatpak,
+        {% endif %}
+        {##########################}
+        {# loop over extra inputs #}
+        {##########################}
         {% if nix_flakes_extra_inputs != '' %}
         {% for extra_input in nix_flakes_extra_inputs %}
         {{ extra_input.name }},
