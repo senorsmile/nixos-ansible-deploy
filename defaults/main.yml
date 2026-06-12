@@ -276,14 +276,17 @@ nixos_flake_config: |
                     {# harden nixos #}
                     {################}
                     {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
+                    {# ### old way? ####
                     "${inputs.nix-mineral}/nix-mineral.nix"
+                     # ################# #}
+                    inputs.nix-mineral.nixosModules.nix-mineral
                     {% endif %}
                     {################}
                     {# home manager #}
                     {################}
                     {% if nix_home_manager is defined and nix_home_manager %}
-                    inputs.home-manager.nixosModules.home-manager
 
+                    inputs.home-manager.nixosModules.home-manager
                     {% endif %}
                     {##################}
                     {# import modules #}
@@ -293,6 +296,7 @@ nixos_flake_config: |
                     {{ import }}
                     {% endfor %}
                     {% endif %}
+
                   ];
                   ####################################
                   {% endif %}
@@ -313,17 +317,18 @@ nixos_flake_config: |
                   };
                   ####################################
                   {% endif %}
-                  {% if nixos_flakes_extra_config is defined  %}
-
+                  {% if nix_nixflatpak is defined and nix_nixflatpak %}
 
                   ####################################
                   # flatpak (nix-flatpak)
                   ####################################
-                  {% if nix_nixflatpak is defined and nix_nixflatpak %}
                   services.flatpak.enable = true;
 
 
                   {% endif %}
+                  {% if nixos_flakes_extra_config is defined  %}
+
+
                   ####################################
                   # extra config
                   ####################################
