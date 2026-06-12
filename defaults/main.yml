@@ -12,6 +12,8 @@ nixos_harden:
   nix_mineral:
     enable: True
     ver: 'v0.3.1-alpha'
+    #presets: ["performance", "compatibility", "maximum"] # OPTIONAL
+    #extra_config: # OPTIONAL: put a multistring config here
 #nix_home_manager_pkgset:
 
 nixos_flake_config: |
@@ -25,7 +27,8 @@ nixos_flake_config: |
         {################}
         {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
 
-        nix-mineral.url = "https://github.com/cynicsketch/nix-mineral.git/{{ nixos_harden.nix_mineral_ver | mandatory }}";
+        #nix-mineral.url = "https://github.com/cynicsketch/nix-mineral.git/{{ nixos_harden.nix_mineral.ver | mandatory }}";
+        nix-mineral.url = "github:cynicsketch/nix-mineral/{{ nixos_harden.nix_mineral.ver | mandatory }}";
         {% endif %}
         {################}
         {# unstable     #}
@@ -265,7 +268,12 @@ nixos_flake_config: |
                   '';
                   {% endif %}
                   ####################################
-                  {% if nixos_flakes_import_modules is defined or nix_home_manager %}
+                  {% if nixos_flakes_import_modules is defined
+                     or
+                     (nixos_harden.enable and nixos_harden.nix_mineral.enable)
+                     or
+                     (nix_home_manager is defined and nix_home_manager)
+                  %}
 
 
                   ####################################
@@ -273,7 +281,7 @@ nixos_flake_config: |
                   ####################################
                   imports = [
                     {################}
-                    {# harden nixos #}
+                    {# nix-mineral - harden nixos #}
                     {################}
                     {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
                     {# ### old way? ####
@@ -314,6 +322,27 @@ nixos_flake_config: |
                       # Import your home-manager configuration
                       {{ nix_home_manager_user }} = import ./home-manager/{{ nix_home_manager_user }}/home.nix;
                     };
+                  };
+                  ####################################
+                  {% endif %}
+                  {% if nixos_harden.enable and nixos_harden.nix_mineral.enable %}
+
+                  ####################################
+                  # harden nixos with nix-mineral
+                  ####################################
+                  nix-mineral = {
+                    enable = true;
+                    {% if nixos_harden.nix_mineral.presets is defined %}
+                    # ["performance", "compatibility", "maximum"]
+                    preset = [
+                    {% for preset in nixos_harden.nix_mineral.presets %}
+                      "{{ preset }}"
+                    {% endfor %}
+                    ];
+                    {% endif %}
+                    {% if nixos_harden.nix_mineral.extra_config is defined %}
+                    {{ nixos_harden.nix_mineral.extra_config }}
+                    {% endif %}
                   };
                   ####################################
                   {% endif %}
