@@ -11,7 +11,7 @@ nixos_harden:
   enable: False
   nix_mineral:
     enable: True
-    ver: 'v0.1.6-alpha'
+    ver: 'v0.3.1-alpha'
 #nix_home_manager_pkgset:
 
 nixos_flake_config: |
