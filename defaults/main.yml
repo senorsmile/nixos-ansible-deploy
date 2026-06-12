@@ -333,6 +333,7 @@ nixos_flake_config: |
                   nix-mineral = {
                     enable = true;
                     {% if nixos_harden.nix_mineral.presets is defined %}
+
                     # ["performance", "compatibility", "maximum"]
                     preset = [
                     {% for preset in nixos_harden.nix_mineral.presets %}
@@ -340,8 +341,9 @@ nixos_flake_config: |
                     {% endfor %}
                     ];
                     {% endif %}
-                    {% if nixos_harden.nix_mineral.extra_config is defined %}
-                    {{ nixos_harden.nix_mineral.extra_config }}
+                    {% if nixos_harden.nix_mineral.extra_config is defined +%}
+
+                    {{ nixos_harden.nix_mineral.extra_config | indent(16) }}
                     {% endif %}
                   };
                   ####################################
