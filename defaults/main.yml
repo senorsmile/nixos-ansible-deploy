@@ -7,6 +7,7 @@ nixos_nixpkgs_unstable: False
 nix_flakes_extra_inputs: ''
 nix_home_manager: False
 nixos_fail2ban: True
+nix_nixflatpak: False
 nixos_harden:
   enable: False
   nix_mineral:
@@ -341,13 +342,19 @@ nixos_flake_config: |
                     {% endfor %}
                     ];
                     {% endif %}
-                    {% if nixos_harden.nix_mineral.extra_config is defined +%}
-
-                    {{ nixos_harden.nix_mineral.extra_config | indent(16) }}
-                    {% endif %}
                   };
                   ####################################
+                  # nix-mineral extra config
+                  ####################################
+                  {% if nixos_harden.nix_mineral.extra_config is defined +%}
+
+                  {{ nixos_harden.nix_mineral.extra_config | indent(14) }}
                   {% endif %}
+                  ####################################
+                  {% endif %}
+                  {# -------------------------------- #}
+                  {# DO NOT enable flatpak by default #}
+                  {#
                   {% if nix_nixflatpak is defined and nix_nixflatpak %}
 
                   ####################################
@@ -357,6 +364,7 @@ nixos_flake_config: |
 
 
                   {% endif %}
+                  #}
                   {% if nixos_flakes_extra_config is defined  %}
 
 
